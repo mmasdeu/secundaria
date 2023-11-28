@@ -12,6 +12,6 @@ you don't see it in the search bar that pops up, start typing it and it show up.
 
 ## Other links
 
-- [![Talk Slides]](https://mat.uab.cat/~masdeu/secundaria)
-- [![Geometry Game]](https://mat.uab.cat/~masdeu/argo)
-- [![Fundamental GAme]](https://mat.uab.cat/~masdeu/fundamental/)
+- [Talk Slides](https://mat.uab.cat/~masdeu/secundaria)
+- [Geometry Game](https://mat.uab.cat/~masdeu/argo)
+- [Fundamental Game](https://mat.uab.cat/~masdeu/fundamental/)
