@@ -15,7 +15,7 @@ lemma induccio (P : ℕ → Prop) (h0 : P 0)
 (h : ∀ n, (P n → P (n+1))) : ∀ n, P n := by sorry
 
 /-
-------------------------------------------------------------
+====================================================================
 -/
 
 
@@ -27,7 +27,7 @@ lemma even_of_even_sq {m : ℕ} (h : 2 ∣ (m^2)) : 2 ∣ m := by
 
 
 
-lemma sqrt2_irrational_aux (coprime_mn : m.gcd n = 1) : m^2 ≠ 2 * n^2 := by
+lemma sqrt2_irrational (coprime_mn : m.gcd n = 1) : m^2 ≠ 2 * n^2 := by
   -- 1) Fem una demostració per reducció a l'absurd
   -- 2) Com que m^2 = 2 * (...), deduïm que 2 ∣ m
   -- 3) Veiem que 2 ∣ n
@@ -42,14 +42,14 @@ lemma sqrt2_irrational_aux (coprime_mn : m.gcd n = 1) : m^2 ≠ 2 * n^2 := by
 
 
 
-example (n : ℕ) : ∑ k in range (n + 1), (k : ℝ) = n * (n + 1) / 2 := by
-  induction' n with d hd
-  · simp
-  · rw [range_succ]
-    rw [sum_insert not_mem_range_self]
-    rw [hd]
-    field_simp
-    ring
+
+
+
+
+
+
+
+
 
 
 
@@ -57,22 +57,34 @@ example (n : ℕ) : ∑ k in range (n + 1), (k : ℝ) = n * (n + 1) / 2 := by
 
 
 /-
-------------------------------------------------------------
+====================================================================
+-/
+
+example : ∀ n, ∑ k in range (n + 1), (k : ℝ) = n * (n + 1) / 2 := by
+  sorry
+  done
+
+
+
+
+
+
+
+
+
+
+
+
+/-
+====================================================================
 -/
 
 
 
 
 
-example (n : ℕ) : ∑ k in range (n + 1), (k^2 : ℝ) = n*(n + 1)*(2*n + 1) / 6 := by
-  induction' n with d hd
-  · simp
-  · rw [range_succ]
-    rw [sum_insert not_mem_range_self]
-    rw [hd]
-    field_simp
-    ring
-  done
+
+
 
 
 
@@ -92,8 +104,8 @@ example (A : Type) [CommRing A] [IsDomain A] (p : A) (hp : p ≠ 0)
   subst a
   rw [mul_assoc] at hab
   nth_rewrite 1 [←mul_one p] at hab
-  have hab' : 1 = k*b
-  · aesop
+  have hab' : 1 = k * b
+  · exact (mul_right_inj' hp).mp hab
   rw [isUnit_iff_exists_inv]
   use k
   rw [hab']
@@ -117,10 +129,10 @@ example (A : Type) [CommRing A] [IsDomain A] (p : A) (hp : p ≠ 0)
 
 
 
+/-
+====================================================================
+-/
 
-
-
--- Parcial 2024
 
 Exemple "Exercici del Parcial 2024"
   Dades:
@@ -145,6 +157,8 @@ QED
 
 
 
+
+
 def Fib : ℕ → ℕ
 | 0 => 0
 | 1 => 1
@@ -154,9 +168,7 @@ def Fib : ℕ → ℕ
 @[simp] lemma Fib1 : Fib 1 = 1 := rfl
 @[simp] lemma Fibdef (n : ℕ) : Fib (n+2) = Fib n + Fib (n+1) := by rfl
 
-Exemple "Fibonacci"
-  Dades:
-  Hipòtesis:
+Exemple "Exercici sobre Fibonacci"
   Conclusió: ∀ n, 1 + ∑ i in range n, Fib i = Fib (n+1)
 
 Demostració:
@@ -177,44 +189,68 @@ section Funcions
 variable {X Y Z : Type}
 variable (f : X → Y) (g : Y → Z)
 
-lemma Comp_def {x : X} : (g ∘ f) x = g (f x) := by rfl
-lemma Injective_def : Injective f ↔ ∀ x y, f x = f y → x = y := by rfl
-lemma Surjective_def : Surjective f ↔ ∀ y, ∃ x, f x  = y := by rfl
+lemma Comp_def {x : X} : (g ∘ f) x = g (f x) := rfl
+lemma Injective_def : Injective f ↔ ∀ x y, f x = f y → x = y := Iff.rfl
+lemma Surjective_def : Surjective f ↔ ∀ y, ∃ x, f x  = y := Iff.rfl
 
-example : Injective (g ∘ f) → Injective f := by
-  intro h x y hxy
-  rw [Injective_def] at h
-  apply h
-  rw [Comp_def, Comp_def, hxy]
-  done
+Exemple "Composició injectiva"
+  Dades: (f : X → Y) (g : Y → Z)
+  Hipòtesis: (h : Injective (g ∘ f))
+  Conclusió: Injective f
 
-example : Surjective (g ∘ f) → Surjective g := by
-  intro h
-  rw [Surjective_def] at h ⊢
-  intro b
-  cases' h b with x hx
-  rw [Comp_def] at hx
-  use f x
+Demostració:
+  Es reescriu mitjançant Injective_def at h ⊢
+  Sigui x y
+  Suposem hf
+  Apliquem h
+  Es reescriu mitjançant Comp_def
+  Es reescriu mitjançant Comp_def
+  Es reescriu mitjançant hf
+QED
 
+
+Exemple "Composició exhaustiva"
+  Dades: (f : X → Y) (g : Y → Z)
+  Hipòtesis: (h : Surjective (g ∘ f))
+  Conclusió: Surjective g
+
+Demostració:
+  Es reescriu mitjançant Surjective_def at h ⊢
+  Sigui b
+  Per h b s'obté x tal que hx
+  Es reescriu mitjançant Comp_def at hx
+  Vegem que (f x) funciona
+  trivial
+QED
 
 
 def Collatz : ℕ → ℕ := λ n ↦ if (Even n) then n / 2  else 3 * n + 1
 
-example : ¬ (Injective Collatz) := by
-  rw [Injective_def]
-  push_neg
-  use 1, 8
-  have : Even 8 := by exact Nat.even_iff.mpr rfl
-  simp [Collatz, this]
-  norm_num
-  done
 
-example : Surjective Collatz := by
-  rw [Surjective_def]
-  intro b
-  use 2 * b
+Exemple "Collatz no és injectiva"
+  Conclusió: ¬ (Injective Collatz)
+
+Demostració:
+  Es reescriu mitjançant Injective_def
+  push_neg
+  Vegem que 1 funciona
+  Vegem que 8 funciona
+  Afirmació h : Even 8 de Nat.even_iff.mpr rfl
+  simp [Collatz, h]
+  Es calcula
+QED
+
+
+
+Exemple "Collatz és exhaustiva'"
+  Conclusió: Surjective Collatz
+Demostració:
+  Es reescriu mitjançant Surjective_def
+  Sigui b : ℕ
+  Vegem que 2*b funciona
   simp [Collatz]
-  done
+QED
+
 
 end Funcions
 
@@ -241,6 +277,17 @@ end Funcions
 
 
 
+/-
+====================================================================
+-/
+
+/-
+====================================================================
+-/
+
+/-
+====================================================================
+-/
 
 
 Exemple "L'arrel quadrada de 2 és irracional"
@@ -251,12 +298,12 @@ Exemple "L'arrel quadrada de 2 és irracional"
 Demostració:
   Suposem per reducció a l'absurd que hc : m^2 = 2 * n^2
 
-  Afirmació m_es_parell : 2 ∣ m per
+  Afirmació m_es_parell : 2 ∣ m perquè
     Apliquem even_of_even_sq
     Vegem que n^2 funciona
     trivial
 
-  Afirmació n_es_parell : 2 ∣ n per
+  Afirmació n_es_parell : 2 ∣ n perquè
     Apliquem even_of_even_sq
     Per m_es_parell obtenim k tal que h : m = 2 * k
     Vegem que k^2 funciona
@@ -299,13 +346,13 @@ example (coprime_mn : m.gcd n = 1) : m^2 ≠ 2 * n^2 := by
   simp at even_gcd
 
 
-lemma sqrt2_irrational {x : ℚ} (hpos : 0 ≤ x) : x^2 ≠ 2 := by
+lemma sqrt2_irrational' {x : ℚ} (hpos : 0 ≤ x) : x^2 ≠ 2 := by
   -- We do a proof by contradiction
   by_contra hc
 
   -- The numerator and denominator of x are coprime
   have num_den_coprime := Rat.reduced x
-  apply sqrt2_irrational_aux num_den_coprime
+  apply sqrt2_irrational num_den_coprime
 
   -- The numerator is positive and the denominator is nonzero
   have num_pos : 0 ≤ x.num := by sorry
