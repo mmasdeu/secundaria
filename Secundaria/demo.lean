@@ -13,16 +13,16 @@ open Function Finset Dvd Rat
 open scoped BigOperators
 
 lemma induccio (P : ℕ → Prop) (h0 : P 0)
-(h : ∀ n, (P n → P (n+1))) : ∀ n, P n := by sorry
+(h : ∀ n, (P n → P (n+1))) : ∀ n, P n := fun n => Nat.recAux h0 h n
 
 
 lemma even_of_even_sq {m : ℕ} (h : 2 ∣ (m^2)) : 2 ∣ m := by
   -- This follows easily from knowing that 2 is prime.
   -- Let's make Lean aware of that:
   have prime_two : Prime 2 := Nat.prime_iff.mp Nat.prime_two
-  sorry
+  exact Prime.dvd_of_dvd_pow prime_two h
 
-lemma sqrt2_irrational_aux (coprime_mn : m.gcd n = 1) : m^2 ≠ 2 * n^2 := by
+lemma sqrt2_irrational (coprime_mn : m.gcd n = 1) : m^2 ≠ 2 * n^2 := by
   -- 1) Fem una demostració per reducció a l'absurd
   by_contra hc
 
@@ -81,8 +81,8 @@ example (A : Type) [CommRing A] [IsDomain A] (p : A) (hp : p ≠ 0)
   subst a
   rw [mul_assoc] at hab
   nth_rewrite 1 [←mul_one p] at hab
-  have hab' : 1 = k*b
-  · aesop
+  have hab' : 1 = k * b
+  · exact (mul_right_inj' hp).mp hab
   rw [isUnit_iff_exists_inv]
   use k
   rw [hab']
@@ -134,15 +134,15 @@ section Funcions
 variable {X Y Z : Type}
 variable (f : X → Y) (g : Y → Z)
 
-lemma Comp_def {x : X} : (g ∘ f) x = g (f x) := by rfl
-lemma Injective_def : Injective f ↔ ∀ x y, f x = f y → x = y := by rfl
-lemma Surjective_def : Surjective f ↔ ∀ y, ∃ x, f x  = y := by rfl
+lemma Comp_def {x : X} : (g ∘ f) x = g (f x) := rfl
+lemma Injective_def : Injective f ↔ ∀ x y, f x = f y → x = y := Iff.rfl
+lemma Surjective_def : Surjective f ↔ ∀ y, ∃ x, f x  = y := Iff.rfl
 
 Exemple "Si g ∘ f és injectiva aleshores f també ho és."
 Conclusió: Injective (g ∘ f) → Injective f
 Prova:
   Suposem h
-  Sigui x y
+  Siguin x y
   Suposem hxy
   Reescrivim la definició de Injective at h
   Apliquem h
@@ -165,21 +165,31 @@ QED
 
 def Collatz : ℕ → ℕ := λ n ↦ if (Even n) then n / 2  else 3 * n + 1
 
-example : ¬ (Injective Collatz) := by
-  rw [Injective_def]
-  push_neg
-  use 1, 8
-  have : Even 8 := by exact Nat.even_iff.mpr rfl
-  simp [Collatz, this]
-  norm_num
-  done
 
-example : Surjective Collatz := by
-  rw [Surjective_def]
-  intro b
-  use 2 * b
+Exemple "Collatz no és injectiva"
+  Conclusió: ¬ (Injective Collatz)
+
+Demostració:
+  Reescrivim la definició de Injective
+  push_neg
+  Vegem que 1 funciona
+  Vegem que 8 funciona
+  Afirmació h : Even 8 de Nat.even_iff.mpr rfl
+  simp [Collatz, h]
+  Calculem
+QED
+
+
+
+Exemple "Collatz és exhaustiva'"
+  Conclusió: Surjective Collatz
+Demostració:
+  Reescrivim la definició de Surjective
+  Sigui b : ℕ
+  Vegem que 2*b funciona
   simp [Collatz]
-  done
+QED
+
 end Funcions
 
 
@@ -211,18 +221,18 @@ Demostració:
 QED
 
 
-lemma sqrt2_irrational {x : ℚ} (hpos : 0 ≤ x) : x^2 ≠ 2 := by
+lemma sqrt2_irrational' {x : ℚ} (hpos : 0 ≤ x) : x^2 ≠ 2 := by
   -- We do a proof by contradiction
   by_contra hc
 
   -- The numerator and denominator of x are coprime
   have num_den_coprime := Rat.reduced x
-  apply sqrt2_irrational_aux num_den_coprime
+  apply sqrt2_irrational num_den_coprime
 
   -- The numerator is positive and the denominator is nonzero
-  have num_pos : 0 ≤ x.num := by sorry
-  have h1 : x.num.natAbs = x.num := by sorry
-  have denom_ne_zero : x.den ≠ 0 := by sorry
+  have num_pos : 0 ≤ x.num := num_nonneg_iff_zero_le.mpr hpos
+  have h1 : x.num.natAbs = x.num := Int.natAbs_of_nonneg num_pos
+  have denom_ne_zero : x.den ≠ 0 := x.den_nz
 
   rw [←num_div_den x] at hc
   field_simp at hc
