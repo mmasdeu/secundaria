@@ -6,17 +6,14 @@ import Mathlib.Tactic.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Rat.Lemmas
 import Mathlib.Algebra.Group.Units
-import Verbose
+import Verbose.Catalan.All
+import Mathlib.Tactic.RewriteSearch
 
 open Function Finset Dvd Rat
 open scoped BigOperators
 
 lemma induccio (P : ℕ → Prop) (h0 : P 0)
 (h : ∀ n, (P n → P (n+1))) : ∀ n, P n := by sorry
-
-/-
-------------------------------------------------------------
--/
 
 
 lemma even_of_even_sq {m : ℕ} (h : 2 ∣ (m^2)) : 2 ∣ m := by
@@ -25,57 +22,49 @@ lemma even_of_even_sq {m : ℕ} (h : 2 ∣ (m^2)) : 2 ∣ m := by
   have prime_two : Prime 2 := Nat.prime_iff.mp Nat.prime_two
   sorry
 
-
-
 lemma sqrt2_irrational_aux (coprime_mn : m.gcd n = 1) : m^2 ≠ 2 * n^2 := by
   -- 1) Fem una demostració per reducció a l'absurd
+  by_contra hc
+
   -- 2) Com que m^2 = 2 * (...), deduïm que 2 ∣ m
+  have even_m : 2 ∣ m
+  · apply even_of_even_sq
+    use n^2
+
   -- 3) Veiem que 2 ∣ n
+  have even_n : 2 ∣ n
+  · apply even_of_even_sq
+    obtain ⟨k, mek⟩ := even_m -- Write m as 2 * k
+    use k^2
+    rw [mek] at hc
+    linarith
+
   -- 4) Deduïm dels dos punts anteriors que 2 ∣ gcd(m,n)
+  have even_gcd : 2 ∣ Nat.gcd m n
+  · exact Nat.dvd_gcd even_m even_n
+
   -- 5) Contradicció amb la hipòtesi inicial
-  sorry
+  rw [coprime_mn] at even_gcd
+  simp at even_gcd
   done
 
-
-
-
-
-
-
-example (n : ℕ) : ∑ k in range (n + 1), (k : ℝ) = n * (n + 1) / 2 := by
-  induction' n with d hd
+example : ∀ n, ∑ k in range (n + 1), (k : ℝ) = n * (n + 1) / 2 := by
+  apply induccio
   · simp
-  · rw [range_succ]
-    rw [sum_insert not_mem_range_self]
-    rw [hd]
+  · intro n hn
+    rw [sum_range_succ]
+    rw [hn]
     field_simp
     ring
 
-
-
-
-
-
-/-
-------------------------------------------------------------
--/
-
-
-
-
-
-example (n : ℕ) : ∑ k in range (n + 1), (k^2 : ℝ) = n*(n + 1)*(2*n + 1) / 6 := by
-  induction' n with d hd
+example : ∀ n, ∑ k in range (n + 1), (k^2 : ℝ) = n * (n + 1) * (2*n+1) / 6 := by
+  apply induccio
   · simp
-  · rw [range_succ]
-    rw [sum_insert not_mem_range_self]
-    rw [hd]
+  · intro n hn
+    rw [@sum_range_succ]
+    rw [hn]
     field_simp
     ring
-  done
-
-
-
 
 example (A : Type) [CommRing A] [IsDomain A] (p : A) (hp : p ≠ 0)
   (h : ∀ a b, p ∣ a * b → p ∣ a ∨ p ∣ b) :
@@ -101,48 +90,18 @@ example (A : Type) [CommRing A] [IsDomain A] (p : A) (hp : p ≠ 0)
   done
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 -- Parcial 2024
 
 Exemple "Exercici del Parcial 2024"
-  Dades:
-  Hipòtesis:
+
   Conclusió: ∀ n, ∃ m, ∀ k, ( (k > n) → 2*k > n + m )
 
 Demostració:
   Sigui n : ℕ
   Vegem que 1 funciona
   Sigui k > n
-  Es conclou amb k_gt
+  Concloem amb k_gt
 QED
-
-
-
-
-
-
-
-
-
-
 
 
 def Fib : ℕ → ℕ
@@ -155,8 +114,6 @@ def Fib : ℕ → ℕ
 @[simp] lemma Fibdef (n : ℕ) : Fib (n+2) = Fib n + Fib (n+1) := by rfl
 
 Exemple "Fibonacci"
-  Dades:
-  Hipòtesis:
   Conclusió: ∀ n, 1 + ∑ i in range n, Fib i = Fib (n+1)
 
 Demostració:
@@ -164,11 +121,11 @@ Demostració:
   · norm_num
   · Sigui n
     Suposem hn
-    Es reescriu mitjançant range_succ
-    Es reescriu mitjançant sum_insert not_mem_range_self
-    Es reescriu mitjançant Fibdef
-    Es reescriu mitjançant ← hn
-    Es calcula
+    Reescrivim mitjançant range_succ
+    Reescrivim mitjançant sum_insert not_mem_range_self
+    Reescrivim mitjançant Fibdef
+    Reescrivim mitjançant ← hn
+    Calculem
 QED
 
 
@@ -181,22 +138,30 @@ lemma Comp_def {x : X} : (g ∘ f) x = g (f x) := by rfl
 lemma Injective_def : Injective f ↔ ∀ x y, f x = f y → x = y := by rfl
 lemma Surjective_def : Surjective f ↔ ∀ y, ∃ x, f x  = y := by rfl
 
-example : Injective (g ∘ f) → Injective f := by
-  intro h x y hxy
-  rw [Injective_def] at h
-  apply h
-  rw [Comp_def, Comp_def, hxy]
-  done
+Exemple "Si g ∘ f és injectiva aleshores f també ho és."
+Conclusió: Injective (g ∘ f) → Injective f
+Prova:
+  Suposem h
+  Sigui x y
+  Suposem hxy
+  Reescrivim la definició de Injective at h
+  Apliquem h
+  Reescrivim mitjançant Comp_def
+  Reescrivim mitjançant Comp_def
+  Reescrivim via hxy
+QED
 
-example : Surjective (g ∘ f) → Surjective g := by
-  intro h
-  rw [Surjective_def] at h ⊢
-  intro b
-  cases' h b with x hx
-  rw [Comp_def] at hx
-  use f x
-
-
+Exemple "Si g ∘ f és exhaustiva aleshores g també ho és."
+Conclusió: Surjective (g ∘ f) → Surjective g
+Prova:
+  Suposem h
+  Reescrivim la definició de Surjective at h ⊢
+  Sigui b
+  Per h aplicat a b obtenim x hx
+  Reescrivim mitjançant Comp_def at hx
+  Vegem que f x funciona
+  trivial
+QED
 
 def Collatz : ℕ → ℕ := λ n ↦ if (Even n) then n / 2  else 3 * n + 1
 
@@ -215,32 +180,7 @@ example : Surjective Collatz := by
   use 2 * b
   simp [Collatz]
   done
-
 end Funcions
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 Exemple "L'arrel quadrada de 2 és irracional"
@@ -251,52 +191,24 @@ Exemple "L'arrel quadrada de 2 és irracional"
 Demostració:
   Suposem per reducció a l'absurd que hc : m^2 = 2 * n^2
 
-  Afirmació m_es_parell : 2 ∣ m per
+  Afirmació m_es_parell : 2 ∣ m perquè
     Apliquem even_of_even_sq
     Vegem que n^2 funciona
     trivial
 
-  Afirmació n_es_parell : 2 ∣ n per
+  Afirmació n_es_parell : 2 ∣ n perquè
     Apliquem even_of_even_sq
     Per m_es_parell obtenim k tal que h : m = 2 * k
     Vegem que k^2 funciona
-    Es reescriu mitjançant h at hc
+    Reescrivim via h at hc
     linarith
 
   Afirmació mcd_es_parell : 2 ∣ Nat.gcd m n de
     Nat.dvd_gcd m_es_parell n_es_parell
 
-  Es reescriu mitjançant mn_coprimers at mcd_es_parell
+  Reescrivim mitjançant mn_coprimers at mcd_es_parell
   trivial
 QED
-
-
-
-
-example (coprime_mn : m.gcd n = 1) : m^2 ≠ 2 * n^2 := by
-  -- we do a proof by contradiction
-  by_contra hc
-
-  -- since m^2 = 2 * something, deduce that m is even
-  have even_m : 2 ∣ m
-  · sorry
-
-  -- Show that n is even, using that n^2 is
-  have even_n : 2 ∣ n
-  · apply even_of_even_sq
-      -- Write m as 2 * k
-    obtain ⟨k, mek⟩ := even_m
-    use k^2
-    rw [mek] at hc
-    linarith
-
-  -- Deduce that 2 ∣ gcd(m,n)
-  have even_gcd : 2 ∣ Nat.gcd m n
-  · sorry
-
-  -- Get a contradiction somehow
-  rw [coprime_mn] at even_gcd
-  simp at even_gcd
 
 
 lemma sqrt2_irrational {x : ℚ} (hpos : 0 ≤ x) : x^2 ≠ 2 := by
